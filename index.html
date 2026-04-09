@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gamechanger Checker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <h1>Gamechanger Checker</h1>
+    <form id="checker-form" novalidate>
+      <label class="field">
+        <span>Deck List</span>
+        <textarea
+          id="deck-input"
+          name="deck"
+          rows="20"
+          placeholder="Paste your deck list here"
+          required
+        ></textarea>
+      </label>
+
+      <div class="options">
+        <label class="checkbox">
+          <input type="checkbox" id="check-gamechangers" name="gamechangers" checked>
+          <span>Check gamechangers</span>
+        </label>
+
+        <label class="checkbox">
+          <input type="checkbox" id="check-legality" name="legality" checked>
+          <span>Check legality</span>
+        </label>
+
+        <label class="field">
+          <span>Format</span>
+          <select id="format-select" name="format">
+            <option value="standard">Standard</option>
+            <option value="future">Future Standard</option>
+            <option value="historic">Historic</option>
+            <option value="timeless">Timeless</option>
+            <option value="gladiator">Gladiator</option>
+            <option value="pioneer">Pioneer</option>
+            <option value="modern">Modern</option>
+            <option value="legacy">Legacy</option>
+            <option value="pauper">Pauper</option>
+            <option value="vintage">Vintage</option>
+            <option value="penny">Penny Dreadful</option>
+            <option value="commander" selected>Commander</option>
+            <option value="oathbreaker">Oathbreaker</option>
+            <option value="standardbrawl">Brawl Standard</option>
+            <option value="brawl">Brawl</option>
+            <option value="alchemy">Alchemy</option>
+            <option value="paupercommander">Commander Pauper</option>
+            <option value="duel">Duel Commander</option>
+            <option value="oldschool">Old School 93/94</option>
+            <option value="premodern">Premodern</option>
+            <option value="predh">PreDH</option>
+          </select>
+        </label>
+      </div>
+
+      <p id="error-message" class="error" role="alert" hidden></p>
+      <button type="submit">Check</button>
+    </form>
+
+    <section id="results" class="results" hidden aria-live="polite">
+      <p id="status-message" class="status" hidden></p>
+
+      <section id="gamechanger-results" class="result-group" hidden>
+        <h2>Gamechangers</h2>
+        <div id="gamechanger-list" class="card-grid"></div>
+      </section>
+
+      <section id="legality-results" class="result-group" hidden>
+        <h2>Not legal in the selected format</h2>
+        <div id="legality-list" class="card-grid"></div>
+      </section>
+
+      <section id="not-found-results" class="result-group" hidden>
+        <h2>Not found</h2>
+        <ul id="not-found-list" class="text-list"></ul>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
