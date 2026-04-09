@@ -131,7 +131,8 @@ function extractCardName(line) {
   }
 
   value = value.replace(/\s+\([A-Z0-9]+\)\s+[A-Z0-9-]+$/i, '').trim();
-  value = value.replace(/\s\/\s/g, ' // ');
+  value = value.replace(/\s*\/\/\s*/g, ' // ');
+  value = value.replace(/\s*(?<!\/)\/(?!\/)\s*/g, ' // ');
 
   return value;
 }
