@@ -121,6 +121,7 @@ function extractCardName(line) {
   let value = trimmedLine
     .replace(/^\d+x?\s+/i, '')
     .replace(/^\[[^\]]+\]\s*/, '')
+    .replace(/^\d+x?\s+/i, '')
     .trim();
 
   const commentMatch = value.match(/\s+#/);
@@ -128,6 +129,9 @@ function extractCardName(line) {
   if (commentMatch) {
     value = value.slice(0, commentMatch.index).trim();
   }
+
+  value = value.replace(/\s+\([A-Z0-9]+\)\s+[A-Z0-9-]+$/i, '').trim();
+  value = value.replace(/\s\/\s/g, ' // ');
 
   return value;
 }

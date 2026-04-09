@@ -12,10 +12,10 @@ https://gcc.antonio.gg/
 ## What It Does
 
 - Accepts a pasted deck list in common deckbuilder text formats.
-- Extracts card names while preserving deck sections, while still ignoring quantities, set tags, comments, blank lines, and the `//Tokens` section.
+- Extracts card names while preserving deck sections.
 - Checks the list against Scryfall for:
   - gamechangers
-  - cards not legal in the selected format
+  - cards restricted, banned or not legal in the selected format
   - cards that could not be recognized
 - Shows matching cards as image links that open their Scryfall pages in a new tab.
 - Adds the source section to illegal/gamechanger results when the card came from a named section such as `//Maybeboard`.
