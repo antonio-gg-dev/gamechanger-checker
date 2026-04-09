@@ -9,6 +9,14 @@
 <body>
   <main class="app">
     <h1>Gamechanger Checker</h1>
+    <div class="intro">
+      <p>
+        This tool checks a Magic deck list against Scryfall to find gamechangers and cards that are not legal in the selected format.
+      </p>
+      <p>
+        Paste your deck list, choose which checks to run, select a format if legality is enabled, and press <strong>Check</strong>.
+      </p>
+    </div>
     <form id="checker-form" novalidate>
       <label class="field">
         <span>Deck List</span>
@@ -82,6 +90,15 @@
         <ul id="not-found-list" class="text-list"></ul>
       </section>
     </section>
+
+    <footer class="footer">
+      <p>
+        Made with ❤️ by <a href="https://antonio.gg/" target="_blank" rel="noreferrer">Antonio</a>
+      </p>
+      <p>
+        🐞 Found a bug? <a href="https://github.com/antonio-gg-dev/gamechanger-checker/issues" target="_blank" rel="noreferrer">Open an issue</a>
+      </p>
+    </footer>
   </main>
 
   <script src="app.js"></script>

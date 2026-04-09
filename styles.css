@@ -20,6 +20,20 @@ h1 {
   font-size: 2rem;
 }
 
+.intro {
+  margin-bottom: 24px;
+  color: #424242;
+}
+
+.intro p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.intro p + p {
+  margin-top: 12px;
+}
+
 form {
   display: grid;
   gap: 16px;
@@ -141,4 +155,30 @@ input:disabled {
 .text-list {
   margin: 0;
   padding-left: 20px;
+}
+
+.footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #d8d8d8;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #424242;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: inherit;
+}
+
+@media (min-width: 720px) {
+  .footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
