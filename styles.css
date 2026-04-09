@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   font-family: sans-serif;
@@ -212,6 +216,14 @@ input:disabled {
 .card-caption-section {
   color: #6f6f6f;
   font-size: 0.78rem;
+}
+
+.card-caption-section--sideboard {
+  color: #1f8f53;
+}
+
+.card-caption-section--maybeboard {
+  color: #2563eb;
 }
 
 .text-list {

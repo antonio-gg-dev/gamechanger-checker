@@ -8,12 +8,14 @@ const results = document.querySelector('#results');
 const statusMessage = document.querySelector('#status-message');
 const gamechangerResults = document.querySelector('#gamechanger-results');
 const gamechangerList = document.querySelector('#gamechanger-list');
-const legalityResults = document.querySelector('#legality-results');
-const legalityList = document.querySelector('#legality-list');
-const othersResults = document.querySelector('#others-results');
-const othersList = document.querySelector('#others-list');
 const notFoundResults = document.querySelector('#not-found-results');
 const notFoundList = document.querySelector('#not-found-list');
+const restrictedResults = document.querySelector('#restricted-results');
+const restrictedList = document.querySelector('#restricted-list');
+const bannedResults = document.querySelector('#banned-results');
+const bannedList = document.querySelector('#banned-list');
+const notLegalResults = document.querySelector('#not-legal-results');
+const notLegalList = document.querySelector('#not-legal-list');
 const submitButton = form.querySelector('button[type="submit"]');
 
 const SCRYFALL_COLLECTION_URL = 'https://api.scryfall.com/cards/collection';
@@ -31,7 +33,13 @@ function syncFormatState() {
 function setStatus(message) {
   statusMessage.textContent = message;
   statusMessage.hidden = !message;
-  results.hidden = !message && gamechangerResults.hidden && legalityResults.hidden && othersResults.hidden;
+  results.hidden =
+    !message &&
+    notFoundResults.hidden &&
+    gamechangerResults.hidden &&
+    restrictedResults.hidden &&
+    bannedResults.hidden &&
+    notLegalResults.hidden;
 }
 
 function clearList(element) {
@@ -89,14 +97,16 @@ function renderCardList(element, cards, options = {}) {
 }
 
 function resetResults() {
-  clearList(gamechangerList);
-  clearList(legalityList);
-  clearList(othersList);
   clearList(notFoundList);
-  gamechangerResults.hidden = true;
-  legalityResults.hidden = true;
-  othersResults.hidden = true;
+  clearList(gamechangerList);
+  clearList(restrictedList);
+  clearList(bannedList);
+  clearList(notLegalList);
   notFoundResults.hidden = true;
+  gamechangerResults.hidden = true;
+  restrictedResults.hidden = true;
+  bannedResults.hidden = true;
+  notLegalResults.hidden = true;
   results.hidden = true;
   setStatus('');
 }
@@ -249,6 +259,17 @@ function formatCardName(card) {
   return card.deckName || card.name;
 }
 
+function getSectionTone(section) {
+  switch (section?.toLowerCase()) {
+    case 'sideboard':
+      return 'sideboard';
+    case 'maybeboard':
+      return 'maybeboard';
+    default:
+      return 'default';
+  }
+}
+
 function formatLegalityStatus(card, format) {
   switch (card.legalities?.[format]) {
     case 'banned':
@@ -317,7 +338,7 @@ function buildCardCaption(card, options = {}) {
   if (card.section) {
     const section = document.createElement('p');
 
-    section.className = 'card-caption-section';
+    section.className = `card-caption-section card-caption-section--${getSectionTone(card.section)}`;
     section.textContent = card.section;
     caption.appendChild(section);
   }
@@ -333,12 +354,22 @@ function renderResults(cards, notFound) {
   const illegalCards = legalityInput.checked
     ? cards.filter((card) => isNotLegal(card, formatSelect.value))
     : [];
-  const restrictedCards = illegalCards.filter(
-    (card) => card.legalities?.[formatSelect.value] === 'restricted'
-  );
-  const otherIllegalCards = illegalCards.filter(
-    (card) => card.legalities?.[formatSelect.value] !== 'restricted'
-  );
+  const restrictedCards = illegalCards.filter((card) => card.legalities?.[formatSelect.value] === 'restricted');
+  const bannedCards = illegalCards.filter((card) => card.legalities?.[formatSelect.value] === 'banned');
+  const notLegalCards = illegalCards.filter((card) => {
+    const legalityStatus = card.legalities?.[formatSelect.value];
+
+    return legalityStatus !== 'restricted' && legalityStatus !== 'banned';
+  });
+
+  notFoundResults.hidden = notFound.length === 0;
+
+  if (notFound.length) {
+    renderTextList(
+      notFoundList,
+      notFound.map((entry) => entry.name || 'Unidentified card')
+    );
+  }
 
   if (gamechangerInput.checked) {
     gamechangerResults.hidden = gameChangerCards.length === 0;
@@ -351,35 +382,36 @@ function renderResults(cards, notFound) {
   }
 
   if (legalityInput.checked) {
-    legalityResults.hidden = otherIllegalCards.length === 0;
-    othersResults.hidden = restrictedCards.length === 0;
-
-    if (otherIllegalCards.length) {
-      renderCardList(legalityList, otherIllegalCards, {
-        showLegalityStatus: true,
-        format: formatSelect.value,
-      });
-    } else {
-      clearList(legalityList);
-    }
+    restrictedResults.hidden = restrictedCards.length === 0;
+    bannedResults.hidden = bannedCards.length === 0;
+    notLegalResults.hidden = notLegalCards.length === 0;
 
     if (restrictedCards.length) {
-      renderCardList(othersList, restrictedCards, {
+      renderCardList(restrictedList, restrictedCards, {
         showLegalityStatus: true,
         format: formatSelect.value,
       });
     } else {
-      clearList(othersList);
+      clearList(restrictedList);
     }
-  }
 
-  notFoundResults.hidden = notFound.length === 0;
+    if (bannedCards.length) {
+      renderCardList(bannedList, bannedCards, {
+        showLegalityStatus: true,
+        format: formatSelect.value,
+      });
+    } else {
+      clearList(bannedList);
+    }
 
-  if (notFound.length) {
-    renderTextList(
-      notFoundList,
-      notFound.map((entry) => entry.name || 'Unidentified card')
-    );
+    if (notLegalCards.length) {
+      renderCardList(notLegalList, notLegalCards, {
+        showLegalityStatus: true,
+        format: formatSelect.value,
+      });
+    } else {
+      clearList(notLegalList);
+    }
   }
 
   const statusMessages = [];
