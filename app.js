@@ -10,6 +10,8 @@ const gamechangerResults = document.querySelector('#gamechanger-results');
 const gamechangerList = document.querySelector('#gamechanger-list');
 const legalityResults = document.querySelector('#legality-results');
 const legalityList = document.querySelector('#legality-list');
+const othersResults = document.querySelector('#others-results');
+const othersList = document.querySelector('#others-list');
 const notFoundResults = document.querySelector('#not-found-results');
 const notFoundList = document.querySelector('#not-found-list');
 const submitButton = form.querySelector('button[type="submit"]');
@@ -29,7 +31,7 @@ function syncFormatState() {
 function setStatus(message) {
   statusMessage.textContent = message;
   statusMessage.hidden = !message;
-  results.hidden = !message && gamechangerResults.hidden && legalityResults.hidden;
+  results.hidden = !message && gamechangerResults.hidden && legalityResults.hidden && othersResults.hidden;
 }
 
 function clearList(element) {
@@ -67,32 +69,20 @@ function getCardImageUrl(card) {
   return '';
 }
 
-function renderCardList(element, cards, formatter) {
+function renderCardList(element, cards, options = {}) {
   clearList(element);
 
   for (const card of cards) {
     const link = document.createElement('a');
-    const image = document.createElement('img');
-    const caption = document.createElement('p');
-    const imageUrl = getCardImageUrl(card);
+    const media = buildCardMedia(card, options);
+    const caption = buildCardCaption(card, options);
 
     link.href = card.scryfall_uri;
     link.target = '_blank';
     link.rel = 'noreferrer';
     link.className = 'card-link';
 
-    if (imageUrl) {
-      image.src = imageUrl;
-      image.alt = card.name;
-      image.loading = 'lazy';
-      link.appendChild(image);
-    } else {
-      link.textContent = card.name;
-    }
-
-    caption.className = 'card-caption';
-    caption.textContent = formatter(card);
-
+    link.appendChild(media);
     link.appendChild(caption);
     element.appendChild(link);
   }
@@ -101,9 +91,11 @@ function renderCardList(element, cards, formatter) {
 function resetResults() {
   clearList(gamechangerList);
   clearList(legalityList);
+  clearList(othersList);
   clearList(notFoundList);
   gamechangerResults.hidden = true;
   legalityResults.hidden = true;
+  othersResults.hidden = true;
   notFoundResults.hidden = true;
   results.hidden = true;
   setStatus('');
@@ -130,16 +122,28 @@ function extractCardName(line) {
   return value;
 }
 
+function extractSectionName(line) {
+  return line.trim().slice(2).trim();
+}
+
+function getLookupName(cardName) {
+  return cardName.split(' // ')[0].trim();
+}
+
 function parseDeckList(text) {
   const cards = [];
   const seen = new Set();
+  let currentSection = '';
   let ignoreGroup = false;
 
   for (const line of text.split('\n')) {
     const trimmedLine = line.trim();
 
     if (trimmedLine.startsWith('//')) {
-      ignoreGroup = trimmedLine.toLowerCase() === '//tokens';
+      const sectionName = extractSectionName(trimmedLine);
+      ignoreGroup = sectionName.toLowerCase() === 'tokens';
+      currentSection = ignoreGroup ? '' : sectionName;
+
       continue;
     }
 
@@ -148,14 +152,17 @@ function parseDeckList(text) {
     }
 
     const cardName = extractCardName(trimmedLine);
-    const cardKey = cardName.toLowerCase();
+    const cardKey = `${currentSection.toLowerCase()}\u0000${cardName.toLowerCase()}`;
 
     if (!cardName || seen.has(cardKey)) {
       continue;
     }
 
     seen.add(cardKey);
-    cards.push(cardName);
+    cards.push({
+      name: cardName,
+      section: currentSection,
+    });
   }
 
   return cards;
@@ -180,7 +187,7 @@ async function fetchCardBatch(cards) {
     },
     body: JSON.stringify({
       identifiers: cards.map((cardName) => ({
-        name: cardName.split(' // ')[0].trim(),
+        name: getLookupName(cardName),
       })),
     }),
   });
@@ -193,16 +200,39 @@ async function fetchCardBatch(cards) {
 }
 
 async function fetchCards(cardEntries) {
-  const batches = chunk(cardEntries, BATCH_SIZE);
-  const fetchedCards = [];
+  const batches = chunk(
+    [...new Set(cardEntries.map((entry) => getLookupName(entry.name).toLowerCase()))],
+    BATCH_SIZE
+  );
+  const cardsByName = new Map();
   const notFound = [];
 
   for (const batch of batches) {
     const payload = await fetchCardBatch(batch);
 
-    fetchedCards.push(...(payload.data || []));
+    for (const card of payload.data || []) {
+      cardsByName.set(getLookupName(card.name).toLowerCase(), card);
+    }
+
     notFound.push(...(payload.not_found || []));
   }
+
+  const fetchedCards = cardEntries
+    .map((entry) => {
+      const lookupName = getLookupName(entry.name).toLowerCase();
+      const card = cardsByName.get(lookupName);
+
+      if (!card) {
+        return null;
+      }
+
+      return {
+        ...card,
+        deckName: entry.name,
+        section: entry.section,
+      };
+    })
+    .filter(Boolean);
 
   return { cards: fetchedCards, notFound };
 }
@@ -215,6 +245,86 @@ function isNotLegal(card, format) {
   return card.legalities?.[format] !== 'legal';
 }
 
+function formatCardName(card) {
+  return card.deckName || card.name;
+}
+
+function formatLegalityStatus(card, format) {
+  switch (card.legalities?.[format]) {
+    case 'banned':
+      return 'Banned';
+    case 'restricted':
+      return 'Restricted';
+    case 'not_legal':
+      return 'Not legal';
+    case 'legal':
+      return 'Legal';
+    default:
+      return 'Unknown';
+  }
+}
+
+function getLegalityStatusTone(card, format) {
+  if (card.legalities?.[format] === 'restricted') {
+    return 'warning';
+  }
+
+  return 'danger';
+}
+
+function buildCardMedia(card, options = {}) {
+  const media = document.createElement('div');
+  const imageUrl = getCardImageUrl(card);
+
+  media.className = 'card-media';
+
+  if (imageUrl) {
+    const image = document.createElement('img');
+
+    image.src = imageUrl;
+    image.alt = card.name;
+    image.loading = 'lazy';
+    media.appendChild(image);
+  } else {
+    const placeholder = document.createElement('div');
+
+    placeholder.className = 'card-media-placeholder';
+    placeholder.textContent = formatCardName(card);
+    media.appendChild(placeholder);
+  }
+
+  if (options.showLegalityStatus) {
+    const status = document.createElement('span');
+
+    status.className = `card-status-ribbon card-status-ribbon--${getLegalityStatusTone(card, options.format)}`;
+    status.textContent = formatLegalityStatus(card, options.format);
+    media.appendChild(status);
+  }
+
+  return media;
+}
+
+function buildCardCaption(card, options = {}) {
+  const caption = document.createElement('div');
+  const name = document.createElement('p');
+
+  caption.className = 'card-caption';
+
+  name.className = 'card-caption-name';
+  name.textContent = formatCardName(card);
+  caption.appendChild(name);
+
+  if (card.section) {
+    const section = document.createElement('p');
+
+    section.className = 'card-caption-section';
+    section.textContent = card.section;
+    caption.appendChild(section);
+  }
+
+  return caption;
+}
+
 function renderResults(cards, notFound) {
   const gameChangerCards = gamechangerInput.checked
     ? cards.filter(isGameChanger)
@@ -223,28 +333,43 @@ function renderResults(cards, notFound) {
   const illegalCards = legalityInput.checked
     ? cards.filter((card) => isNotLegal(card, formatSelect.value))
     : [];
+  const restrictedCards = illegalCards.filter(
+    (card) => card.legalities?.[formatSelect.value] === 'restricted'
+  );
+  const otherIllegalCards = illegalCards.filter(
+    (card) => card.legalities?.[formatSelect.value] !== 'restricted'
+  );
 
   if (gamechangerInput.checked) {
     gamechangerResults.hidden = gameChangerCards.length === 0;
 
     if (gameChangerCards.length) {
-      renderCardList(gamechangerList, gameChangerCards, (card) => card.name);
+      renderCardList(gamechangerList, gameChangerCards);
     } else {
       clearList(gamechangerList);
     }
   }
 
   if (legalityInput.checked) {
-    legalityResults.hidden = illegalCards.length === 0;
+    legalityResults.hidden = otherIllegalCards.length === 0;
+    othersResults.hidden = restrictedCards.length === 0;
 
-    if (illegalCards.length) {
-      renderCardList(
-        legalityList,
-        illegalCards,
-        (card) => `${card.name} (${card.legalities?.[formatSelect.value] || 'unknown'})`
-      );
+    if (otherIllegalCards.length) {
+      renderCardList(legalityList, otherIllegalCards, {
+        showLegalityStatus: true,
+        format: formatSelect.value,
+      });
     } else {
       clearList(legalityList);
+    }
+
+    if (restrictedCards.length) {
+      renderCardList(othersList, restrictedCards, {
+        showLegalityStatus: true,
+        format: formatSelect.value,
+      });
+    } else {
+      clearList(othersList);
     }
   }
 

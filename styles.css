@@ -138,18 +138,80 @@ input:disabled {
   text-decoration: none;
 }
 
-.card-link img {
+.card-media {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.card-link img,
+.card-media-placeholder {
   display: block;
   width: 100%;
-  height: auto;
-  border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+}
+
+.card-link img {
+  height: auto;
+}
+
+.card-media-placeholder {
+  aspect-ratio: 63 / 88;
+  padding: 16px;
+  background: linear-gradient(160deg, #262626, #4a4a4a);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  display: flex;
+  align-items: flex-end;
+}
+
+.card-status-ribbon {
+  position: absolute;
+  top: 20px;
+  right: -50px;
+  width: 200px;
+  padding: 6px 0;
+  color: #fff8e8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  transform: rotate(30deg);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.card-status-ribbon--danger {
+  background: rgba(180, 35, 24, 0.92);
+}
+
+.card-status-ribbon--warning {
+  background: rgba(181, 129, 5, 0.94);
 }
 
 .card-caption {
   margin: 8px 0 0;
   color: #1f1f1f;
+  display: grid;
+  gap: 2px;
+}
+
+.card-caption-name,
+.card-caption-section {
+  margin: 0;
+}
+
+.card-caption-name {
+  color: #1f1f1f;
   font-size: 0.95rem;
+}
+
+.card-caption-section {
+  color: #6f6f6f;
+  font-size: 0.78rem;
 }
 
 .text-list {
