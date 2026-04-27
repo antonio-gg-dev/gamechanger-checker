@@ -130,7 +130,7 @@ function extractCardName(line) {
     value = value.slice(0, commentMatch.index).trim();
   }
 
-  value = value.replace(/\s+\([A-Z0-9]+\)\s+[A-Z0-9-]+$/i, '').trim();
+  value = value.replace(/\s+\([A-Z0-9]+\)\s+[A-Z0-9-]+(?:\s+\*F\*)?$/i, '').trim();
   value = value.replace(/\s*\/\/\s*/g, ' // ');
   value = value.replace(/\s*(?<!\/)\/(?!\/)\s*/g, ' // ');
 
